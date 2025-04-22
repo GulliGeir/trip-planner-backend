@@ -51,8 +51,8 @@ export default async function handler(req, res) {
         const startDate = departureDate || new Date().toISOString().split('T')[0];
         const endDate = returnDate || startDate;
 
-        const response = await fetch(
-          `https://api.bokun.io/product-search.json?startDate=${startDate}&endDate=${endDate}`,
+        const response = await fetch(`https://booking.bokun.io/api/product-search.json?startDate=${startDate}&endDate=${endDate}`, {
+
           {
             headers: {
               "X-Bokun-AccessKey": process.env.BOKUN_API_KEY,
