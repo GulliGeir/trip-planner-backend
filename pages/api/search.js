@@ -38,7 +38,7 @@ export default async function handler(req, res) {
       const bokunUrl = 'https://api.bokun.io/activity.json'; // check actual endpoint and params in Bokun docs
       const tourRes = await fetch(bokunUrl, {
         headers: {
-          "X-Bokun-AccessKey": "YOUR_BOKUN_API_KEY"
+          "X-Bokun-AccessKey": "2418f8609f0e4ec4ab6d3dca0f407b25"
         }
       });
       const tourData = await tourRes.json();
