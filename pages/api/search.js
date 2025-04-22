@@ -45,31 +45,35 @@ export default async function handler(req, res) {
       ];
     }
 
-    // ✅ TOURS - Real Bokun API
-    if (includeTours) {
-      try {
-        const response = await fetch("https://api.bokun.io/activity.json", {
-          headers: {
-            "X-Bokun-AccessKey": process.env.BOKUN_API_KEY,
-            "Content-Type": "application/json"
-          }
-        });
+    // TOURS for Bokun Reseller
+if (includeTours) {
+  try {
+    const startDate = departureDate || new Date().toISOString().split('T')[0];
+    const endDate = returnDate || startDate;
 
-        const bokunData = await response.json();
-
-        results.tours = bokunData.activities.map((tour) => ({
-          id: tour.id,
-          name: tour.title,
-          description: tour.shortDescription,
-          price: tour.defaultPrice?.amount || 0,
-          currency: tour.defaultPrice?.currency || 'USD',
-          thumbnail: tour.photos?.[0]?.url || null
-        }));
-      } catch (err) {
-        console.error("Bokun API Error:", err);
-        results.tours = [];
+    const response = await fetch(`https://api.bokun.io/product-search.json?startDate=${startDate}&endDate=${endDate}`, {
+      headers: {
+        "X-Bokun-AccessKey": process.env.BOKUN_API_KEY,
+        "Content-Type": "application/json"
       }
-    }
+    });
+
+    const bokunData = await response.json();
+
+    results.tours = (bokunData.products || []).map((tour) => ({
+      id: tour.id,
+      name: tour.title,
+      description: tour.shortDescription || '',
+      price: tour.defaultPrice?.amount || 0,
+      currency: tour.defaultPrice?.currency || 'USD',
+      thumbnail: tour.photos?.[0]?.url || null
+    }));
+  } catch (err) {
+    console.error("Bokun reseller tour fetch error:", err);
+    results.tours = [];
+  }
+}
+
 
     return res.status(200).json(results);
 
