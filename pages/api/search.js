@@ -20,7 +20,7 @@ export default async function handler(req, res) {
   const results = {};
 
   try {
-    // ✅ Flights - real API
+    // ✅ FLIGHTS (real from Travelpayouts)
     if (includeFlights) {
       const flightRes = await fetch(
         `https://api.travelpayouts.com/v1/prices/cheap?origin=${origin}&destination=KEF&depart_date=${departureDate}&return_date=${returnDate}&token=${process.env.TRAVELPAYOUTS_TOKEN}`
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       results.flights = Object.values(flightData.data?.KEF || {});
     }
 
-    // ✅ Hotels - fake data
+    // ✅ HOTELS (fake for now)
     if (includeHotels) {
       results.hotels = [
         { name: "Reykjavik Grand Hotel", price: 160 },
@@ -37,7 +37,7 @@ export default async function handler(req, res) {
       ];
     }
 
-    // ✅ Cars - fake data
+    // ✅ CARS (fake for now)
     if (includeCars) {
       results.cars = [
         { type: "Compact", price: 85 },
@@ -45,35 +45,37 @@ export default async function handler(req, res) {
       ];
     }
 
-    // TOURS for Bokun Reseller
-if (includeTours) {
-  try {
-    const startDate = departureDate || new Date().toISOString().split('T')[0];
-    const endDate = returnDate || startDate;
+    // ✅ TOURS (Real Bokun reseller API)
+    if (includeTours) {
+      try {
+        const startDate = departureDate || new Date().toISOString().split('T')[0];
+        const endDate = returnDate || startDate;
 
-    const response = await fetch(`https://api.bokun.io/product-search.json?startDate=${startDate}&endDate=${endDate}`, {
-      headers: {
-        "X-Bokun-AccessKey": process.env.BOKUN_API_KEY,
-        "Content-Type": "application/json"
+        const response = await fetch(
+          `https://api.bokun.io/product-search.json?startDate=${startDate}&endDate=${endDate}`,
+          {
+            headers: {
+              "X-Bokun-AccessKey": process.env.BOKUN_API_KEY,
+              "Content-Type": "application/json"
+            }
+          }
+        );
+
+        const bokunData = await response.json();
+
+        results.tours = (bokunData.products || []).map((tour) => ({
+          id: tour.id,
+          name: tour.title,
+          description: tour.shortDescription || '',
+          price: tour.defaultPrice?.amount || 0,
+          currency: tour.defaultPrice?.currency || 'USD',
+          thumbnail: tour.photos?.[0]?.url || null
+        }));
+      } catch (err) {
+        console.error("Bokun reseller tour fetch error:", err);
+        results.tours = [];
       }
-    });
-
-    const bokunData = await response.json();
-
-    results.tours = (bokunData.products || []).map((tour) => ({
-      id: tour.id,
-      name: tour.title,
-      description: tour.shortDescription || '',
-      price: tour.defaultPrice?.amount || 0,
-      currency: tour.defaultPrice?.currency || 'USD',
-      thumbnail: tour.photos?.[0]?.url || null
-    }));
-  } catch (err) {
-    console.error("Bokun reseller tour fetch error:", err);
-    results.tours = [];
-  }
-}
-
+    }
 
     return res.status(200).json(results);
 
@@ -82,5 +84,4 @@ if (includeTours) {
     return res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 }
-
 
