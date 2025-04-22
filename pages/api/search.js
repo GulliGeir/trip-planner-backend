@@ -1,53 +1,63 @@
-// pages/api/search.js
-
 export default async function handler(req, res) {
-  if (req.method !== "POST") {
-    return res.status(405).json({ error: "Method not allowed" });
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { origin, departureDate, returnDate, adults, budget, includeFlights, includeHotels, includeCars, includeTours } = req.body;
+  console.log("Received body:", req.body);
+
+  const {
+    origin,
+    departureDate,
+    returnDate,
+    adults,
+    budget,
+    includeFlights,
+    includeHotels,
+    includeCars,
+    includeTours
+  } = req.body;
+
   const results = {};
 
   try {
-    // Flights (example using Travelpayouts API)
+    // FLIGHTS (Travelpayouts)
     if (includeFlights) {
-      const flightUrl = `https://api.travelpayouts.com/v1/prices/cheap?origin=${origin}&destination=KEF&depart_date=${departureDate}&return_date=${returnDate}&token=2352229ce17e3f55dda5315050907762`;
-      const flightRes = await fetch(flightUrl);
+      const flightRes = await fetch(
+        `https://api.travelpayouts.com/v1/prices/cheap?origin=${origin}&destination=KEF&depart_date=${departureDate}&return_date=${returnDate}&token=${process.env.TRAVELPAYOUTS_TOKEN}`
+      );
       const flightData = await flightRes.json();
-      results.flights = flightData.data.KEF || [];
+      console.log("Flight data:", flightData);
+      results.flights = Object.values(flightData.data?.KEF || {});
     }
 
-    // Hotels (mock example; replace with your real API logic)
+    // HOTELS (fake for now)
     if (includeHotels) {
       results.hotels = [
         { name: "Hotel Reykjavik", price: 150 },
-        { name: "Icelandic Comfort", price: 120 }
+        { name: "Budget Stay", price: 100 }
       ];
     }
 
-    // Rental Cars (mock example)
+    // RENTAL CARS (fake for now)
     if (includeCars) {
       results.cars = [
-        { type: "Economy", price: 100 },
-        { type: "SUV", price: 150 }
+        { type: "Economy", price: 85 },
+        { type: "SUV", price: 130 }
       ];
     }
 
-    // Tours (example using Bokun API)
+    // TOURS (fake for now)
     if (includeTours) {
-      const bokunUrl = 'https://api.bokun.io/activity.json'; // check actual endpoint and params in Bokun docs
-      const tourRes = await fetch(bokunUrl, {
-        headers: {
-          "X-Bokun-AccessKey": "2418f8609f0e4ec4ab6d3dca0f407b25"
-        }
-      });
-      const tourData = await tourRes.json();
-      results.tours = tourData.activities || [];
+      results.tours = [
+        { name: "Golden Circle Tour", price: 110 },
+        { name: "Northern Lights Tour", price: 95 }
+      ];
     }
 
     res.status(200).json(results);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    console.error("API error:", error);
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 }
 
