@@ -50,13 +50,33 @@ export default async function handler(req, res) {
       ];
     }
 
-    // ✅ Tours - fake data
-    if (includeTours) {
-      results.tours = [
-        { name: "Golden Circle Tour", price: 115 },
-        { name: "Northern Lights Adventure", price: 95 }
-      ];
-    }
+    // TOURS (Real data from Bokun)
+if (includeTours) {
+  try {
+    const response = await fetch("https://api.bokun.io/activity.json", {
+      headers: {
+        "X-Bokun-AccessKey": process.env.BOKUN_API_KEY,
+        "Content-Type": "application/json"
+      }
+    });
+
+    const bokunData = await response.json();
+
+    // Optional: only keep some key fields for frontend
+    results.tours = bokunData.activities.map((tour) => ({
+      id: tour.id,
+      name: tour.title,
+      description: tour.shortDescription,
+      price: tour.defaultPrice.amount,
+      currency: tour.defaultPrice.currency,
+      thumbnail: tour.photos?.[0]?.url
+    }));
+  } catch (err) {
+    console.error("Bokun API Error:", err);
+    results.tours = [];
+  }
+}
+
 
     // Return everything as JSON
     return res.status(200).json(results);
