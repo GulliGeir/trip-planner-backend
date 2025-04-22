@@ -62,6 +62,8 @@ export default async function handler(req, res) {
         );
 
         const bokunData = await response.json();
+        console.log("Bokun reseller raw data:", bokunData);
+
 
         results.tours = (bokunData.products || []).map((tour) => ({
           id: tour.id,
